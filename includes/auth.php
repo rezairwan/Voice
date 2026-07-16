@@ -4,7 +4,7 @@ session_start();
 function isLoggedIn() { return isset($_SESSION['user_id']); }
 
 function requireLogin() {
-    if (!isLoggedIn()) { header('Location: /login.php'); exit; }
+    if (!isLoggedIn()) { header('Location: /kai/login.php'); exit; }
 }
 
 function getCurrentUser($pdo) {

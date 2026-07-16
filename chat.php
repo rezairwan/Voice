@@ -91,24 +91,36 @@ $msgs->execute([$userId,$friendId,$friendId,$userId]); $messages = $msgs->fetchA
             <div style="flex:1;height:1px;background:var(--border);"></div>
           </div>
         <?php endif; if ($isGrouped): ?>
-          <div class="msg-continued" data-id="<?= $m['id'] ?>" data-mine="<?= $m['sender_id']==$userId?'1':'0' ?>" style="padding:1px 16px 1px 72px;position:relative;" onmouseenter="showMsgActions(this)" onmouseleave="hideMsgActions(this)">
+          <div class="msg-continued" data-id="<?= $m['id'] ?>" style="padding:1px 16px 1px 72px;position:relative;display:flex;align-items:flex-start;gap:8px;">
             <span class="msg-side-time" style="position:absolute;left:18px;top:3px;font-size:10px;color:var(--text3);display:none;"><?= date('H:i', strtotime($m['created_at'])) ?></span>
-            <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?><?php if(!empty($m['is_edited'])): ?> <span class="edited-tag">(diedit)</span><?php endif; ?></div>
-            <?php if($m['sender_id']==$userId): ?><div class="msg-actions" style="display:none;"><button onclick="startEdit(<?= $m['id'] ?>)">✏️ Edit</button><button onclick="deleteMsg(<?= $m['id'] ?>)">🗑️ Hapus</button></div><?php endif; ?>
+            <div style="flex:1;">
+              <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?></div>
+            </div>
+            <?php if($m['sender_id']==$userId): ?>
+            <div class="msg-actions-inline">
+              <button class="act-btn" onclick="startEdit(<?= $m['id'] ?>)" title="Edit">✏️</button>
+              <button class="act-btn act-del" onclick="deleteMsg(<?= $m['id'] ?>)" title="Hapus">🗑️</button>
+            </div>
+            <?php endif; ?>
           </div>
         <?php else: ?>
-          <div class="msg-group" id="msg-<?= $m['id'] ?>" data-id="<?= $m['id'] ?>" data-mine="<?= $m['sender_id']==$userId?'1':'0' ?>" onmouseenter="showMsgActions(this)" onmouseleave="hideMsgActions(this)">
+          <div class="msg-group" id="msg-<?= $m['id'] ?>" data-id="<?= $m['id'] ?>">
             <div class="msg-group-av">
               <?php if(!empty($m['avatar'])): ?><img src="<?= htmlspecialchars($m['avatar']) ?>" class="av" style="width:40px;height:40px;"><?php else: ?><div class="av" style="width:40px;height:40px;font-size:15px;"><?= strtoupper(substr($m['username'],0,1)) ?></div><?php endif; ?>
             </div>
-            <div class="msg-body">
+            <div class="msg-body" style="flex:1;">
               <div class="msg-meta">
                 <span class="msg-author" style="color:<?= $m['sender_id']==$userId ? 'var(--accent)' : 'var(--text)' ?>"><?= htmlspecialchars($m['username']) ?></span>
                 <span class="msg-timestamp"><?= date('d/m/Y H:i', strtotime($m['created_at'])) ?></span>
               </div>
-              <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?><?php if(!empty($m['is_edited'])): ?> <span class="edited-tag">(diedit)</span><?php endif; ?></div>
-              <?php if($m['sender_id']==$userId): ?><div class="msg-actions" style="display:none;"><button onclick="startEdit(<?= $m['id'] ?>)">✏️ Edit</button><button onclick="deleteMsg(<?= $m['id'] ?>)">🗑️ Hapus</button></div><?php endif; ?>
+              <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?></div>
             </div>
+            <?php if($m['sender_id']==$userId): ?>
+            <div class="msg-actions-inline">
+              <button class="act-btn" onclick="startEdit(<?= $m['id'] ?>)" title="Edit">✏️</button>
+              <button class="act-btn act-del" onclick="deleteMsg(<?= $m['id'] ?>)" title="Hapus">🗑️</button>
+            </div>
+            <?php endif; ?>
           </div>
         <?php endif; $prevSenderId = $m['sender_id']; $prevDate = $msgDate; endforeach; ?>
       </div>
@@ -160,7 +172,7 @@ $msgs->execute([$userId,$friendId,$friendId,$userId]); $messages = $msgs->fetchA
 </div>
 
 <!-- Edit Message Modal -->
-<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;">
+<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,.6);">
     <div style="font-weight:700;font-size:16px;margin-bottom:14px;">✏️ Edit Pesan</div>
     <textarea id="edit-input" rows="4" style="width:100%;background:var(--sidebar);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
@@ -268,19 +280,6 @@ async function sendMessage() {
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── CRUD helpers ──────────────────────────────────────────────
-function showMsgActions(el) {
-  if (el.dataset.mine !== '1') return;
-  const a = el.querySelector('.msg-actions');
-  if (a) { a.style.display = 'flex'; }
-  const t = el.querySelector('.msg-side-time');
-  if (t) { t.style.display = 'block'; }
-}
-function hideMsgActions(el) {
-  const a = el.querySelector('.msg-actions');
-  if (a) { a.style.display = 'none'; }
-  const t = el.querySelector('.msg-side-time');
-  if (t) { t.style.display = 'none'; }
-}
 
 let editingId = null;
 function startEdit(id) {

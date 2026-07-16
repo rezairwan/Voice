@@ -4,7 +4,7 @@ require_once '../includes/auth.php';
 requireLogin();
 header('Content-Type: application/json');
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data    = json_decode(file_get_contents('php://input'), true);
 $id      = (int)($data['id']      ?? 0);
 $content = trim($data['content']  ?? '');
 $me      = $_SESSION['user_id'];
@@ -22,6 +22,13 @@ if (!$msg || (int)$msg['sender_id'] !== $me) {
     echo json_encode(['ok' => false, 'error' => 'Unauthorized']); exit;
 }
 
-$pdo->prepare("UPDATE messages SET content=?, is_edited=1 WHERE id=?")->execute([$content, $id]);
+// Try with is_edited column first, fallback if column doesn't exist
+try {
+    $pdo->prepare("UPDATE messages SET content=?, is_edited=1 WHERE id=?")->execute([$content, $id]);
+} catch (PDOException $e) {
+    // is_edited column might not exist yet, update only content
+    $pdo->prepare("UPDATE messages SET content=? WHERE id=?")->execute([$content, $id]);
+}
+
 echo json_encode(['ok' => true]);
 ?>

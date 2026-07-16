@@ -3,7 +3,7 @@ require_once 'config/database.php';
 require_once 'includes/auth.php';
 requireLogin();
 updateOnlineStatus($pdo, $_SESSION['user_id']);
-$userId = $_SESSION['user_id'];
+$userId = (int)$_SESSION['user_id'];
 $me = getCurrentUser($pdo);
 $friendId = (int)($_GET['id'] ?? 0);
 if (!$friendId) { header('Location: friends.php'); exit; }
@@ -80,7 +80,8 @@ $msgs->execute([$userId,$friendId,$friendId,$userId]); $messages = $msgs->fetchA
           $msgDate = date('Y-m-d', strtotime($m['created_at']));
           $today = date('Y-m-d'); $yesterday = date('Y-m-d', strtotime('-1 day'));
           $isNewDate = ($msgDate !== $prevDate);
-          $isGrouped = ($prevSenderId === $m['sender_id'] && !$isNewDate);
+          $isGrouped = ((int)$prevSenderId === (int)$m['sender_id'] && !$isNewDate);
+          $isMine    = ((int)$m['sender_id'] === $userId);
           if ($isNewDate):
         ?>
           <div style="display:flex;align-items:center;gap:12px;padding:8px 16px;margin:8px 0;">
@@ -91,34 +92,33 @@ $msgs->execute([$userId,$friendId,$friendId,$userId]); $messages = $msgs->fetchA
             <div style="flex:1;height:1px;background:var(--border);"></div>
           </div>
         <?php endif; if ($isGrouped): ?>
-          <div class="msg-continued" data-id="<?= $m['id'] ?>" style="padding:1px 16px 1px 72px;position:relative;display:flex;align-items:flex-start;gap:8px;">
-            <span class="msg-side-time" style="position:absolute;left:18px;top:3px;font-size:10px;color:var(--text3);display:none;"><?= date('H:i', strtotime($m['created_at'])) ?></span>
+          <div style="display:flex;align-items:center;gap:8px;padding:1px 16px 1px 72px;position:relative;">
             <div style="flex:1;">
               <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?></div>
             </div>
-            <?php if($m['sender_id']==$userId): ?>
-            <div class="msg-actions-inline">
-              <button class="act-btn" onclick="startEdit(<?= $m['id'] ?>)" title="Edit">✏️</button>
-              <button class="act-btn act-del" onclick="deleteMsg(<?= $m['id'] ?>)" title="Hapus">🗑️</button>
+            <?php if($isMine): ?>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button onclick="startEdit(<?= $m['id'] ?>)" style="background:#3b3d45;border:1px solid #555;border-radius:5px;color:#ccc;font-size:13px;padding:2px 7px;cursor:pointer;" title="Edit">✏️</button>
+              <button onclick="deleteMsg(<?= $m['id'] ?>)" style="background:#3b3d45;border:1px solid #555;border-radius:5px;color:#ccc;font-size:13px;padding:2px 7px;cursor:pointer;" title="Hapus">🗑️</button>
             </div>
             <?php endif; ?>
           </div>
         <?php else: ?>
-          <div class="msg-group" id="msg-<?= $m['id'] ?>" data-id="<?= $m['id'] ?>">
-            <div class="msg-group-av">
+          <div class="msg-group" id="msg-<?= $m['id'] ?>" style="display:flex;gap:16px;padding:4px 16px;align-items:flex-start;">
+            <div class="msg-group-av" style="flex-shrink:0;">
               <?php if(!empty($m['avatar'])): ?><img src="<?= htmlspecialchars($m['avatar']) ?>" class="av" style="width:40px;height:40px;"><?php else: ?><div class="av" style="width:40px;height:40px;font-size:15px;"><?= strtoupper(substr($m['username'],0,1)) ?></div><?php endif; ?>
             </div>
-            <div class="msg-body" style="flex:1;">
+            <div style="flex:1;min-width:0;">
               <div class="msg-meta">
-                <span class="msg-author" style="color:<?= $m['sender_id']==$userId ? 'var(--accent)' : 'var(--text)' ?>"><?= htmlspecialchars($m['username']) ?></span>
+                <span class="msg-author" style="color:<?= $isMine ? 'var(--accent)' : 'var(--text)' ?>"><?= htmlspecialchars($m['username']) ?></span>
                 <span class="msg-timestamp"><?= date('d/m/Y H:i', strtotime($m['created_at'])) ?></span>
               </div>
               <div class="msg-content" id="mc-<?= $m['id'] ?>"><?= nl2br(htmlspecialchars($m['content'])) ?></div>
             </div>
-            <?php if($m['sender_id']==$userId): ?>
-            <div class="msg-actions-inline">
-              <button class="act-btn" onclick="startEdit(<?= $m['id'] ?>)" title="Edit">✏️</button>
-              <button class="act-btn act-del" onclick="deleteMsg(<?= $m['id'] ?>)" title="Hapus">🗑️</button>
+            <?php if($isMine): ?>
+            <div style="display:flex;gap:4px;flex-shrink:0;padding-top:4px;">
+              <button onclick="startEdit(<?= $m['id'] ?>)" style="background:#3b3d45;border:1px solid #555;border-radius:5px;color:#ccc;font-size:13px;padding:2px 7px;cursor:pointer;" title="Edit">✏️</button>
+              <button onclick="deleteMsg(<?= $m['id'] ?>)" style="background:#3b3d45;border:1px solid #555;border-radius:5px;color:#ccc;font-size:13px;padding:2px 7px;cursor:pointer;" title="Hapus">🗑️</button>
             </div>
             <?php endif; ?>
           </div>

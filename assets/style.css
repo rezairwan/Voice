@@ -267,19 +267,15 @@ body { background:var(--main); color:var(--text); display:flex; height:100vh; ov
 
 /* Always-visible action buttons on own messages */
 .msg-actions-inline {
-  display:flex; align-items:flex-start; gap:2px; flex-shrink:0; padding-top:2px; opacity:0; transition:opacity .15s;
-}
-.msg-group:hover .msg-actions-inline,
-.msg-continued:hover .msg-actions-inline {
-  opacity:1;
+  display:flex; align-items:center; gap:2px; flex-shrink:0; padding-top:2px;
 }
 .act-btn {
-  width:28px; height:28px; border-radius:4px; background:transparent; border:none;
-  cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center;
-  transition:background .1s; line-height:1;
+  width:26px; height:26px; border-radius:4px; background:var(--panel); border:1px solid var(--border);
+  cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;
+  transition:background .1s; line-height:1; color:var(--text2);
 }
-.act-btn:hover { background:var(--hover); }
-.act-del:hover { background:rgba(242,63,67,.15); }
+.act-btn:hover { background:var(--accent2); border-color:var(--accent2); }
+.act-del:hover { background:var(--danger); border-color:var(--danger); }
 
 /* Chat input */
 #chat-input-wrap {
